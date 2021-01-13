@@ -1,22 +1,76 @@
 package com.maxcompany.osworks.api.controller;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.maxcompany.osworks.domain.model.Cliente;
+import com.maxcompany.osworks.domain.repository.ClienteRepository;
 
 @RestController
+@RequestMapping("/clientes")
 public class ClienteController {
+	
+	@Autowired
+	private ClienteRepository clienteRepository;
 
-	@GetMapping("/clientes")
+	@GetMapping
 	public List<Cliente> listar() {
-		Cliente cliente1 = new Cliente(1L, "Maxley", "maxleysoares006@gmail.com", "34 98803-9861");
-		Cliente cliente2 = new Cliente(2L, "kiki", "aquinoam24@gmail.com", "34 97777-1111");
-		
-		return Arrays.asList(cliente1, cliente2);
+		return clienteRepository.findAll();
 	}
 	
+	@GetMapping("/{clienteId}")
+	public ResponseEntity<Cliente> buscar(@PathVariable Long clienteId){
+		Optional<Cliente> cliente = clienteRepository.findById(clienteId);
+		
+		if(cliente.isPresent()) {
+			return ResponseEntity.ok(cliente.get());
+		}
+		
+		return ResponseEntity.notFound().build();
+	}
+	
+	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
+	public Cliente adicionar(@RequestBody Cliente cliente){
+		return clienteRepository.save(cliente);
+	}
+	
+	@PutMapping("/{clienteId}")
+	public ResponseEntity<Cliente> atualizar(@PathVariable Long clienteId, @RequestBody Cliente cliente){
+		
+		if(!clienteRepository.existsById(clienteId)) {
+			return ResponseEntity.notFound().build();
+		}
+		
+		cliente.setId(clienteId);
+		cliente = clienteRepository.save(cliente);
+		
+		return ResponseEntity.ok(cliente);
+	}
+	
+	@DeleteMapping("/{clienteId}")
+	public ResponseEntity<Void> deletar(@PathVariable Long clienteId){
+		
+		Optional<Cliente> cliente = clienteRepository.findById(clienteId);
+		
+		if(cliente.isPresent()) {
+			clienteRepository.deleteById(clienteId);
+			return ResponseEntity.noContent().build();
+		}
+		
+		return ResponseEntity.notFound().build();
+	}
 }
